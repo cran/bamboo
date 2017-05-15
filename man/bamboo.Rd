@@ -8,7 +8,7 @@
 \alias{bamboo}
 \title{Bayesian Model of Protein Primary Sequence for Secondary Structure Prediction}
 \description{
-These functions implement the methodology described in the paper "Bayesian Model of Protein Primary Sequence for Secondary Structure Prediction".  The main function is \code{bamboo.estimate}, whose arguments are results from \code{bamboo.priorMSA}, \code{bamboo.priorNoHE}, and \code{bamboo.likelihood} functions.  A \code{plot} method is provided to produce figures like those in the paper using results of the  \code{bamboo.estimate} function.
+These functions implement the methodology described in the paper "Bayesian Model of Protein Primary Sequence for Secondary Structure Prediction" cited below.  The main function is \code{bamboo.estimate}, whose arguments are results from \code{bamboo.priorMSA}, \code{bamboo.priorNoHE}, and \code{bamboo.likelihood} functions.  A \code{plot} method is provided to produce figures like those in the paper using results of the  \code{bamboo.estimate} function.  The \code{bamboo.prepare} function ensures that the necessary dependencies are loaded (and is automatically called by the other functions).
 }
 \usage{
 bamboo.likelihood(primary,secondary,countsDirectory="HETC",force=FALSE,warn=TRUE)
@@ -31,7 +31,7 @@ bamboo.estimate(likelihood,prior,nSamples,dropFirst,initialState=NULL,
   \item{force}{A logical indicating that, in the case that the count files already exists, the counting should be performed again away.  This is necessary if the \code{\var{primary}} or \code{\var{secondary}} arguments have changed since the last counting.}
   \item{warn}{A logical indicating that, in the case that the count files already exists, a warning should be displayed indicating that the counting is not performed again. Recounting is necessary if the \code{\var{primary}} or \code{\var{secondary}} arguments have changed since the last counting.}
   \item{likelihood}{The result obtained by evaluating the function returned by \code{bamboo.likelihood} for an amino acid sequence encoded as a character vector of length 1 using 1-letter amino acid codes.}
-  \item{prior}{The result of a call to the \code{bamboo.priorMM} function or the \code{bamboo.priorNoHE} function.}
+  \item{prior}{The result of a call to the \code{bamboo.priorMSA} function or the \code{bamboo.priorNonInfo} function.}
   \item{nSamples}{An integer giving the number of MCMC samples after burnin to use for inference.}
   \item{dropFirst}{An integer giving the number of MCMC samples to discard as burnin.}
   \item{initialState}{A character vector of length 1 giving the secondary structure state to start the Markov chain Monte Carlo algorithm.  If \code{NULL}, a reasonable default is used.}
@@ -46,20 +46,19 @@ bamboo.estimate(likelihood,prior,nSamples,dropFirst,initialState=NULL,
   \item{mapState}{The estimated secondary structure state using the maximum a posterior (MAP) method that returns the visited state that maximizes the posterior probability.}
   \item{marginalProbabilities}{A matrix of marginal probabilities of each state for each position.}
 }
-\references{
-Li, Dahl, Vannucci, Joo, Tsai (2014), Bayesian Model of Protein Primary Sequence for Secondary Structure Prediction (\url{http://dahl.byu.edu/software/bamboo/})
-}
+\references{Q. Li, D. B. Dahl, M. Vannucci, H. Joo, J. W. Tsai (2014), Bayesian Model of Protein Primary Sequence for Secondary Structure Prediction, PLOS ONE, 9(10), e109832. <DOI:10.1371/journal.pone.0109832>}
 \author{
-David B. Dahl
+David B. Dahl \email{dahl@stat.byu.edu}
 }
 \examples{
-\donttest{
 data(bamboo.training,
      bamboo.validation.casp9,
      bamboo.validation.astral30,
      bamboo.MSA.casp9,
      bamboo.MSA.astral30)
 
+\dontrun{
+## Be patient, this example can take several seconds on a fast computer.
 likelihood <- bamboo.likelihood(bamboo.training[,"primary"],bamboo.training[,"hetc"],force=TRUE)
 
 prior.NonInfo <- bamboo.priorNonInfo()
@@ -67,8 +66,8 @@ bamboo.MSA <- c(bamboo.MSA.casp9,bamboo.MSA.astral30)
 
 target <- "f3rvca_0"
 aa <- bamboo.validation.astral30[bamboo.validation.astral30$name==target,"primary"]
-fm.NonInfo <- bamboo.estimate(likelihood(aa),prior.NonInfo,100000,1000)
-fm.MSA     <- bamboo.estimate(likelihood(aa),bamboo.priorMSA(bamboo.MSA[[target]]),100000,1000)
+fm.NonInfo <- bamboo.estimate(likelihood(aa),prior.NonInfo,5000,500)
+fm.MSA     <- bamboo.estimate(likelihood(aa),bamboo.priorMSA(bamboo.MSA[[target]]),5000,500)
 
 ss <- c(
   "Truth"=bamboo.validation.astral30[bamboo.validation.astral30$name==target,"hetc"],
@@ -76,12 +75,6 @@ ss <- c(
   "MSA-MP"=fm.MSA$mpState
 )
 plot(fm.MSA,ss)
-
-}
-\dontshow{
-data(bamboo.training)
-likelihood <- bamboo.likelihood(bamboo.training[1:10,"primary"],bamboo.training[1:10,"hetc"],force=TRUE)
-prior.NonInfo <- bamboo.priorNonInfo()
 }
 }
 
